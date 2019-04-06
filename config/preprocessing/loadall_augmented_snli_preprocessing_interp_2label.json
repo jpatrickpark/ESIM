@@ -1,0 +1,16 @@
+{
+    "data_dir": "../data/dataset/augmented",
+    "original_dir": "../data/dataset/all",
+    "embeddings_file": "../data/embeddings/glove.interp.300d.txt",
+    "target_dir": "../data/preprocessed/augmented_interp_2label",
+
+    "lowercase": false,
+    "ignore_punctuation": false,
+    "num_words": null,
+    "stopwords": [],
+    "labeldict": {"entailment": 0,
+                  "neutral": 1,
+                  "contradiction": 1},
+    "bos": "_BOS_",
+    "eos": "_EOS_"
+}

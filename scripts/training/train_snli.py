@@ -23,7 +23,7 @@ def main(train_file,
          valid_file,
          embeddings_file,
          target_dir,
-         hidden_size=300,
+         hidden_size=301,
          dropout=0.5,
          num_classes=3,
          epochs=64,
@@ -31,7 +31,9 @@ def main(train_file,
          lr=0.0004,
          patience=5,
          max_grad_norm=10.0,
-         checkpoint=None):
+         checkpoint=None,
+         gpu_number=1,
+         requires_grad=True):
     """
     Train the ESIM model on the SNLI dataset.
 
@@ -56,7 +58,7 @@ def main(train_file,
         checkpoint: A checkpoint from which to continue training. If None,
             training starts from scratch. Defaults to None.
     """
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:{}".format(gpu_number) if torch.cuda.is_available() else "cpu")
 
     print(20 * "=", " Preparing for training ", 20 * "=")
 
@@ -90,6 +92,9 @@ def main(train_file,
                  num_classes=num_classes,
                  device=device).to(device)
 
+    if not requires_grad:
+        model._word_embedding.requires_grad = False
+
     # -------------------- Preparation for training  ------------------- #
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -108,7 +113,10 @@ def main(train_file,
 
     # Continuing training from a checkpoint if one was given as argument.
     if checkpoint:
+        checkpoint_str = checkpoint
         checkpoint = torch.load(checkpoint)
+        if 'best.pth.tar' in checkpoint_str:
+            checkpoint = torch.load(checkpoint_str[:-12]+'esim_'+str(checkpoint['epoch'])+'.pth.tar')
         start_epoch = checkpoint['epoch'] + 1
         best_score = checkpoint['best_score']
 
@@ -195,14 +203,14 @@ def main(train_file,
             break
 
     # Plotting of the loss curves for the train and validation sets.
-    plt.figure()
-    plt.plot(epochs_count, train_losses, '-r')
-    plt.plot(epochs_count, valid_losses, '-b')
-    plt.xlabel('epoch')
-    plt.ylabel('loss')
-    plt.legend(['Training loss', 'Validation loss'])
-    plt.title('Cross entropy loss')
-    plt.show()
+    #plt.figure()
+    #plt.plot(epochs_count, train_losses, '-r')
+    #plt.plot(epochs_count, valid_losses, '-b')
+    #plt.xlabel('epoch')
+    #plt.ylabel('loss')
+    #plt.legend(['Training loss', 'Validation loss'])
+    #plt.title('Cross entropy loss')
+    #plt.show()
 
 
 if __name__ == "__main__":
@@ -213,7 +221,19 @@ if __name__ == "__main__":
     parser.add_argument('--checkpoint',
                         default=None,
                         help='path to a checkpoint file to resume training')
+    parser.add_argument('--gpu_number',
+                        default=0,
+                        type=int,
+                        help='path to a checkpoint file to resume training')
+    parser.add_argument('--requires_grad',
+                        action='store_true',
+                        help='path to a checkpoint file to resume training')
+    parser.add_argument('--target_dir',
+                        default="../data/checkpoints/SNLI",
+                        help='Path to a json configuration file')
     args = parser.parse_args()
+
+    os.makedirs(args.target_dir, exist_ok=True)
 
     with open(os.path.normpath(args.config), 'r') as config_file:
         config = json.load(config_file)
@@ -221,7 +241,7 @@ if __name__ == "__main__":
     main(os.path.normpath(config["train_data"]),
          os.path.normpath(config["valid_data"]),
          os.path.normpath(config["embeddings"]),
-         os.path.normpath(config["target_dir"]),
+         os.path.normpath(args.target_dir),
          config["hidden_size"],
          config["dropout"],
          config["num_classes"],
@@ -230,4 +250,6 @@ if __name__ == "__main__":
          config["lr"],
          config["patience"],
          config["max_gradient_norm"],
-         args.checkpoint)
+         args.checkpoint,
+         args.gpu_number,
+         args.requires_grad)
