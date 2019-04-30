@@ -1,0 +1,17 @@
+{
+    "train_data": "../data/preprocessed/snli_and_addition_301/train_data.pkl",
+    "valid_data": "../data/preprocessed/snli_and_addition_301/dev_data.pkl",
+    "embeddings": "../data/preprocessed/snli_and_addition_301/embeddings.pkl",
+
+    "target_dir": "../data/checkpoints/snli_and_addition_301",
+    
+    "hidden_size": 301,
+    "dropout": 0,
+    "num_classes": 3,
+
+    "epochs": 64,
+    "batch_size": 32,
+    "lr": 0.0004,
+    "patience": 5,
+    "max_gradient_norm": 10.0
+}
